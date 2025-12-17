@@ -470,21 +470,6 @@ const styles = `
   }
 
   .task-pool-empty {
-  /* Todo 本文＋アクション */
-  .todo-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .todo-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    margin-top: 2px;
-  }
     text-align: center;
     color: #AAA;
     font-size: 12px;
