@@ -496,9 +496,11 @@ function App() {
 
   const [totalMinutes, setTotalMinutes] = useState('0');
 
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   React.useEffect(() => {
     const fetchTasks = async () => {
-      const res = await fetch('http://localhost:8000/api/tasks');
+      const res = await fetch(`${API_BASE}/api/tasks`);
       if (!res.ok) {
         console.error('タスク一覧の取得に失敗しました');
         return;
@@ -533,7 +535,7 @@ function App() {
     //   maxDuration: max,
     // };
 
-    const res = await fetch('http://localhost:8000/api/tasks', {
+    const res = await fetch(`${API_BASE}/api/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -559,7 +561,7 @@ function App() {
 
   // 削除
   const handleDeleteFromPool = async (id: number) => {
-    const res = await fetch(`http://localhost:8000/api/tasks/${id}`, {
+    const res = await fetch(`${API_BASE}/api/tasks/${id}`, {
       method: 'DELETE',
     });
 
@@ -605,7 +607,7 @@ function App() {
       return;
     }
 
-    const res = await fetch('http://localhost:8000/api/tasks/generate', {
+    const res = await fetch(`${API_BASE}/api/tasks/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ total_minutes: total }),
