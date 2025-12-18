@@ -25,9 +25,8 @@ RUN composer install \
     --no-interaction \
     --prefer-dist
 
-# Pre-generate caches (失敗してもコンテナ起動に影響しないように || true を付ける)
-RUN php artisan config:cache || true \
- && php artisan route:cache || true
+# ストレージとキャッシュディレクトリに書き込み権限を付与
+RUN chown -R www-data:www-data storage bootstrap/cache
 
 # ===== Nginx configuration =====
 RUN rm -f /etc/nginx/sites-enabled/default \
@@ -38,9 +37,9 @@ RUN rm -f /etc/nginx/sites-enabled/default \
     root /var/www/html/public; \
     index index.php index.html; \
     location / { \
-        try_files $uri $uri/ /index.php?$query_string; \
+        try_files $\\uri $\\uri/ /index.php?$query_string; \
     } \
-    location ~ \.php$ { \
+    location ~ \\.php$$ { \
         include snippets/fastcgi-php.conf; \
         fastcgi_pass 127.0.0.1:9000; \
     } \
@@ -49,6 +48,9 @@ RUN rm -f /etc/nginx/sites-enabled/default \
 EXPOSE 10000
 
 # ===== Start PHP-FPM + Nginx =====
-CMD sh -c "php-fpm & nginx -g 'daemon off;'"
-
-
+# 起動時に環境変数を使ってキャッシュとマイグレーションを実行
+CMD php artisan config:clear \
+ && php artisan config:cache \
+ && php artisan route:cache \
+ && php artisan migrate --force || true \
+ && php-fpm & nginx -g 'daemon off;'
