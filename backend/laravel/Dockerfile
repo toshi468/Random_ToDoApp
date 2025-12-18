@@ -1,10 +1,12 @@
 FROM php:8.2-fpm-bullseye
 
 # ===== System dependencies & PHP extensions =====
+# - gettext-base: envsubst (render nginx config from template)
 RUN apt-get update && apt-get install -y \
     nginx \
     git \
     unzip \
+    gettext-base \
     libpq-dev \
     libzip-dev \
   && docker-php-ext-install pdo pdo_pgsql zip \
@@ -25,32 +27,20 @@ RUN composer install \
     --no-interaction \
     --prefer-dist
 
-# ストレージとキャッシュディレクトリに書き込み権限を付与
+# ===== App write permissions =====
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# ===== Nginx configuration =====
-RUN rm -f /etc/nginx/sites-enabled/default \
- && rm -f /etc/nginx/conf.d/default.conf \
- && printf '%s\n' 'server {' \
- '    listen 10000;' \
- '    server_name _;' \
- '    root /var/www/html/public;' \
- '    index index.php index.html;' \
- '    location / {' \
- '        try_files $uri $uri/ /index.php?$query_string;' \
- '    }' \
- '    location ~ \.php$ {' \
- '        include snippets/fastcgi-php.conf;' \
- '        fastcgi_pass 127.0.0.1:9000;' \
- '    }' \
- '}' > / etc/nginx/conf.d/laravel.conf
+# ===== Nginx configuration (template; rendered at runtime) =====
+RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf \
+ && mkdir -p /etc/nginx/templates
+COPY docker/nginx.conf.template /etc/nginx/templates/laravel.conf.template
 
+# ===== Entrypoint =====
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Render typically sets PORT=10000; keep a sensible default.
+ENV PORT=10000
 EXPOSE 10000
 
-# ===== Start PHP-FPM + Nginx =====
-# 起動時に環境変数を使ってキャッシュとマイグレーションを実行
-CMD php artisan config:clear \
- && php artisan config:cache \
- && php artisan route:cache \
- && php artisan migrate --force || true \
- && php-fpm & nginx -g 'daemon off;'
+ENTRYPOINT ["/entrypoint.sh"]
