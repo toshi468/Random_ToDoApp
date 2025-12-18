@@ -31,19 +31,19 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 # ===== Nginx configuration =====
 RUN rm -f /etc/nginx/sites-enabled/default \
  && rm -f /etc/nginx/conf.d/default.conf \
- && echo 'server { \
-    listen 10000; \
-    server_name _; \
-    root /var/www/html/public; \
-    index index.php index.html; \
-    location / { \
-        try_files $\\uri $\\uri/ /index.php?$query_string; \
-    } \
-    location ~ \\.php$$ { \
-        include snippets/fastcgi-php.conf; \
-        fastcgi_pass 127.0.0.1:9000; \
-    } \
-}' > /etc/nginx/conf.d/laravel.conf
+ && printf '%s\n' 'server {' \
+ '    listen 10000;' \
+ '    server_name _;' \
+ '    root /var/www/html/public;' \
+ '    index index.php index.html;' \
+ '    location / {' \
+ '        try_files $uri $uri/ /index.php?$query_string;' \
+ '    }' \
+ '    location ~ \.php$ {' \
+ '        include snippets/fastcgi-php.conf;' \
+ '        fastcgi_pass 127.0.0.1:9000;' \
+ '    }' \
+ '}' > / etc/nginx/conf.d/laravel.conf
 
 EXPOSE 10000
 
